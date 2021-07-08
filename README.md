@@ -28,6 +28,10 @@ For details, please refer to the paper.
 - Standard evaluation protocols.   
 - Posterior recommendation results.
 
+## Data  
+Download from Google Drive: [MovieLens/MOOC/Amazon-Vedio-Game](https://drive.google.com/drive/folders/1WqRAeoWWGdZplYkjS4640V7v0urNiTXg?usp=sharing)  
+
+
 ## Environment:  
 
 python	3.6  
