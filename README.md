@@ -37,8 +37,8 @@ Download from Google Drive: [MovieLens/MOOC/Amazon-Vedio-Game](https://drive.goo
 python	3.6  
 pytorch	1.8  
 PyYAML	0.1.7  
-pandas	0.24
-numpy 1.19 
+pandas	0.24  
+numpy 1.19  
 
 
 ## ACK:
