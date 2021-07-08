@@ -7,16 +7,17 @@ Xin Zhou, Aixin Sun, Yong Liu, Jie Zhang, Chunyan Miao. SelfCF: A Simple Framewo
 ## Overview
 
 <p align="center">
-<img src="./Figure/framework.png" width="500">
+<img src="./figures/framework.png" width="800">
 </p>
 
-We present a simple framework that specialized for collaborative filtering problem. The framework enables learning of latent representations of users and items **without Negative Samples**. We augment the output embeddings generated from backbone networks instead of the input user-item ids. For output embedding augmentation, we propose three technologies:  
+We present a simple framework that specialized for collaborative filtering problem. The framework enables learning of latent representations of users and items **without Negative Samples**.  
+We augment the output embeddings generated from backbone networks instead of the input user-item ids. For output embedding augmentation, we propose three technologies:  
 - Historical embedding.
 - Embedding dropout.
 - Edge pruning.  
 
 <p align="center">
-<img src="./Figure/augmentation.png" width="500">
+<img src="./figures/augmentation.png" width="800">
 </p>
 
 For details, please refer to the paper. 
