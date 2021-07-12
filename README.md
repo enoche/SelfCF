@@ -11,7 +11,7 @@ Xin Zhou, Aixin Sun, Yong Liu, Jie Zhang, Chunyan Miao. SelfCF: A Simple Framewo
 </p>
 
 We present a simple framework that specialized for collaborative filtering problem. The framework enables learning of latent representations of users and items **without Negative Samples**.  
-We augment the output embeddings generated from backbone networks instead of the input user-item ids. For output embedding augmentation, we propose three technologies:  
+We augment the output embeddings generated from backbone networks instead of the input user-item ids. For output embedding augmentation, we propose three techniques:  
 - Historical embedding.
 - Embedding dropout.
 - Edge pruning.  
@@ -42,7 +42,7 @@ numpy 1.19
 
 
 ## ACK:
-We would like to give thanks to the following repo:  
+We would like to give thanks to the following repos:  
 [RecBole](https://github.com/RUCAIBox/RecBole)  
 [BUIR](https://github.com/donalee/BUIR)
 
