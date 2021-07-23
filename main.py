@@ -23,7 +23,7 @@ from utils.quick_start import quick_start
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m', type=str, default='SELFCFHE_BPR', help='name of models')
-    parser.add_argument('--dataset', '-d', type=str, default='ml-10k', help='name of datasets')
+    parser.add_argument('--dataset', '-d', type=str, default='ml-100k', help='name of datasets')
 
     config_dict = {
         'gpu_id': 0,
