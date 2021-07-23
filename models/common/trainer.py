@@ -7,12 +7,9 @@
 # @Author : Zihan Lin, Yupeng Hou, Yushuo Chen, Shanlei Mu, Xingyu Pan, Hui Wang, Xinyan Fan
 # @Email  : linzihan.super@foxmail.com, houyupeng@ruc.edu.cn, chenyushuo@ruc.edu.cn, slmu@ruc.edu.cn, panxy@ruc.edu.cn, hui.wang@ruc.edu.cn, xinyan.fan@ruc.edu.cn
 
-# UPDATE 2:
-# @Time   :
-# @Author : Xin Zhou
-# @Email  : enoche.chow@gmail.com
-
 r"""
+Update by Zhou Xin
+enoche.chow@gmail.com
 ################################
 """
 
@@ -259,13 +256,13 @@ class Trainer(AbstractTrainer):
                 valid_end_time = time()
                 valid_score_output = "epoch %d evaluating [time: %.2fs, valid_score: %f]" % \
                                      (epoch_idx, valid_end_time - valid_start_time, valid_score)
-                valid_result_output = 'valid result: \n' + dict2str(valid_result)
+                valid_result_output = 'valid result: ' + dict2str(valid_result)
                 # test
-                _, test_result = self._valid_epoch(test_data)
+                #_, test_result = self._valid_epoch(test_data)
                 if verbose:
                     self.logger.info(valid_score_output)
                     self.logger.info(valid_result_output)
-                    self.logger.info('test result: \n' + dict2str(test_result))
+                    #self.logger.info('test result: ' + dict2str(test_result))
                 if update_flag:
                     if saved:
                         self._save_checkpoint(epoch_idx)

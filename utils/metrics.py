@@ -8,10 +8,6 @@
 # @Author  :   Kaiyuan Li, Zhichao Feng, Xingyu Pan
 # @email   :   tsotfsk@outlook.com, fzcbupt@gmail.com, panxy@ruc.edu.cn
 
-
-# UPDATE 2
-# @Time :
-# @email: enoche.chow@gmail.com
 """
 ############################
 """
@@ -23,7 +19,6 @@ from sklearn.metrics import auc as sk_auc
 from sklearn.metrics import log_loss, mean_absolute_error, mean_squared_error
 
 #    TopK Metrics    #
-
 
 def hit_(pos_index, pos_len):
     r"""Hit_ (also known as hit ratio at :math:`N`) is a way of calculating how many 'hits' you have

@@ -6,6 +6,7 @@
 # Update by xin
 # @Email: enoche.chow@gmail.com
 """
+recbole.utils.enum_type
 #######################
 """
 

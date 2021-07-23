@@ -53,6 +53,9 @@ class LightGCN(GeneralRecommender):
         self.n_layers = config['n_layers']  # int type:the layer num of lightGCN
         self.reg_weight = config['reg_weight']  # float32 type: the weight decay for l2 normalizaton
 
+        # define layers and loss
+        #self.user_embedding = torch.nn.Embedding(num_embeddings=self.n_users, embedding_dim=self.latent_dim)
+        #self.item_embedding = torch.nn.Embedding(num_embeddings=self.n_items, embedding_dim=self.latent_dim)
         self.mf_loss = BPRLoss()
         self.reg_loss = EmbLoss()
 

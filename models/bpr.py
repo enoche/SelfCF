@@ -8,10 +8,7 @@
 # @Author : Shanlei Mu
 # @Email  : slmu@ruc.edu.cn
 
-# UPDATE 2:
-# @Time   :
-# @Author : Xin Zhou
-# @Email  : enoche.chow@gmail.com
+
 r"""
 BPR
 ################################################

@@ -7,11 +7,8 @@
 # @Author : Shanlei Mu, Yupeng Hou
 # @Email  : slmu@ruc.edu.cn, houyupeng@ruc.edu.cn
 
-
-# UPDATE 2
-# @Time :
-# @email: enoche.chow@gmail.com
 """
+recbole.config.configurator
 ################################
 """
 

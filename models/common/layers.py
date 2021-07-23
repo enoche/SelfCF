@@ -9,10 +9,6 @@
 # @Author : Yujie Lu, Xingyu Pan, Zhichao Feng, Hui Wang
 # @Email  : yujielu1998@gmail.com, panxy@ruc.edu.cn, fzcbupt@gmail.com, hui.wang@ruc.edu.cn
 
-# UPDATE 2:
-# @Time   :
-# @Author : Xin Zhou
-# @Email  : enoche.chow@gmail.com
 """
 #############################
 Common Layers in recommender system

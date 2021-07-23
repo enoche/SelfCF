@@ -5,11 +5,10 @@
 
 r"""
 ################################################
-Self-supervised CF
+Self-supervised Graph CF
 
 Using current implementation of LightGCN
-
-SELFCF_{ed}: embedding dropout
+Dropout in SelfCF
 """
 
 import scipy.sparse as sp
@@ -33,6 +32,7 @@ class SELFCFED_BPR(GeneralRecommender):
 
         self.online_encoder = BPR(config, dataset)
         self.predictor = nn.Linear(self.latent_size, self.latent_size)
+        self.emb_loss = EmbLoss()
 
     def forward(self):
         u_online, i_online = self.online_encoder()

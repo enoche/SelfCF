@@ -5,9 +5,9 @@
 
 r"""
 ################################################
-Self-supervised CF
+Self-supervised Graph CF
 
-Using current implementation of LightGCN
+Using current implementation of BPR
 
 SELFCF_{he}: history embeddings
 """
@@ -34,6 +34,8 @@ class SELFCFHE_BPR(GeneralRecommender):
         self.online_encoder = BPR(config, dataset)
         self.predictor = nn.Linear(self.latent_size, self.latent_size)
 
+        # self.u_target_his = nn.Embedding(self.n_users, self.latent_size).requires_grad_(False)
+        # self.i_target_his = nn.Embedding(self.n_items, self.latent_size).requires_grad_(False)
         self.u_target_his = torch.randn((self.n_users, self.latent_size), requires_grad=False).to(self.device)
         self.i_target_his = torch.randn((self.n_items, self.latent_size), requires_grad=False).to(self.device)
 

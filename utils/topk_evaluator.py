@@ -8,10 +8,6 @@
 # @Author  :   Kaiyuan Li, Yupeng Hou
 # @email   :   tsotfsk@outlook.com, houyupeng@ruc.edu.cn
 
-
-# UPDATE 2
-# @Time :
-# @email: enoche.chow@gmail.com
 """
 ################################
 """

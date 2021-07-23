@@ -1,7 +1,3 @@
-# coding: utf-8
-# @Time   : 2021/04/01
-# @Author : Xin Zhou
-# @Email  : enoche.chow@gmail.com
 
 
 import numpy as np

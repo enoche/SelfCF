@@ -1,7 +1,3 @@
-# coding: utf-8
-# @Time   : 2021/04/01
-# @Author : Xin Zhou
-# @Email  : enoche.chow@gmail.com
 
 import torch.nn as nn
 from torch.nn.init import xavier_normal_, xavier_uniform_, constant_
