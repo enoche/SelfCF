@@ -4,7 +4,7 @@
 # @Email  : enoche.chow@gmail.com
 
 r"""
-BUIR_NB
+BUIR
 ################################################
 Bootstrapping User and Item Representations for One-Class Collaborative Filtering, SIGIR21
 """
@@ -19,9 +19,9 @@ from models.common.abstract_recommender import GeneralRecommender
 from models.common.encoders import LightGCN_Encoder
 
 
-class BUIR_NB(GeneralRecommender):
+class BUIR(GeneralRecommender):
     def __init__(self, config, dataset):
-        super(BUIR_NB, self).__init__(config, dataset)
+        super(BUIR, self).__init__(config, dataset)
         self.user_count = self.n_users
         self.item_count = self.n_items
         self.latent_size = config['embedding_size']
