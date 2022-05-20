@@ -1,4 +1,8 @@
+
 # SelfCF: A Simple Framework for Self-supervised Collaborative Filtering
+
+:label: **Note**: This repo. is deprecated. SelfCF is integrated into [ImRec](https://github.com/enoche/ImRec).
+
 
 This is our implementation of the paper:
 
