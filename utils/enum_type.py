@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
-# @Time   : 2020/8/9
-# @Author : Yupeng Hou
-# @Email  : houyupeng@ruc.edu.cn
-#
-# Update by xin
-# @Email: enoche.chow@gmail.com
+
 """
-recbole.utils.enum_type
 #######################
 """
 

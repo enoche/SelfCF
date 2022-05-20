@@ -1,9 +1,4 @@
 # coding: utf-8
-# @Time   : 2021/04/01
-# @Author : Xin Zhou
-# @Email  : enoche.chow@gmail.com
-
-# UPDATE:
 
 """
 Utility functions
@@ -123,6 +118,6 @@ def dict2str(result_dict):
 
     result_str = ''
     for metric, value in result_dict.items():
-        result_str += str(metric) + ' : ' + '%.04f' % value + '    '
+        result_str += str(metric) + ': ' + '%.04f' % value + '    '
     return result_str
 

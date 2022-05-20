@@ -1,3 +1,4 @@
+# coding: utf-8
 
 
 import numpy as np
@@ -8,6 +9,12 @@ import torch.nn as nn
 class AbstractRecommender(nn.Module):
     r"""Base class for all models
     """
+
+    def pre_epoch_processing(self):
+        pass
+
+    def post_epoch_processing(self):
+        pass
 
     def calculate_loss(self, interaction):
         r"""Calculate the training loss for a batch data.
@@ -59,7 +66,6 @@ class AbstractRecommender(nn.Module):
         model_parameters = self.parameters()
         params = sum([np.prod(p.size()) for p in model_parameters])
         return super().__str__() + '\nTrainable parameters: {}'.format(params)
-
 
 
 class GeneralRecommender(AbstractRecommender):

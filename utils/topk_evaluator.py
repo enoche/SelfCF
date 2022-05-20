@@ -1,12 +1,4 @@
 # -*- encoding: utf-8 -*-
-# @Time    :   2020/08/04
-# @Author  :   Kaiyuan Li
-# @email   :   tsotfsk@outlook.com
-
-# UPDATE
-# @Time    :   2020/08/04, 2020/08/11
-# @Author  :   Kaiyuan Li, Yupeng Hou
-# @email   :   tsotfsk@outlook.com, houyupeng@ruc.edu.cn
 
 """
 ################################
@@ -21,7 +13,7 @@ from utils.utils import get_local_time
 
 
 # These metrics are typical in topk recommendations
-topk_metrics = {metric.lower(): metric for metric in ['Hit', 'Recall', 'MRR', 'Precision', 'NDCG', 'MAP']}
+topk_metrics = {metric.lower(): metric for metric in ['Recall', 'MRR', 'Precision', 'NDCG', 'MAP']}
 
 
 class TopKEvaluator(object):
@@ -33,7 +25,6 @@ class TopKEvaluator(object):
         across users. Some of them are also limited to k.
 
     """
-
     def __init__(self, config):
         self.config = config
         self.metrics = config['metrics']
@@ -91,6 +82,7 @@ class TopKEvaluator(object):
             x_df = pd.DataFrame(topk_index)
             x_df.insert(0, 'id', eval_data.get_eval_users())
             x_df.columns = ['id']+['top_'+str(i) for i in range(max_k)]
+            x_df = x_df.astype(int)
             x_df.to_csv(file_path, sep='\t', index=False)
         assert len(pos_len_list) == len(topk_index)
         # if recom right?
@@ -109,7 +101,6 @@ class TopKEvaluator(object):
         return metric_dict
 
     def _check_args(self):
-
         # Check metrics
         if isinstance(self.metrics, (str, list)):
             if isinstance(self.metrics, str):
@@ -134,42 +125,20 @@ class TopKEvaluator(object):
         else:
             raise TypeError('The topk must be a integer, list')
 
-    def metrics_info(self, pos_idx, pos_len):
-        """get metrics result
-
+    def _calculate_metrics(self, pos_len_list, topk_index):
+        """integrate the results of each batch and evaluate the topk metrics by users
         Args:
-            pos_idx (np.ndarray): the bool index of all users' topk items that indicating the postive items are
-                topk items or not
-            pos_len (list): the length of all users' postivite items
-
+            pos_len_list (list): a list of users' positive items
+            topk_index (np.ndarray): a matrix which contains the index of the topk items for users
         Returns:
-            list: a list of matrix which record the results from `1` to `max(topk)`
-
+            np.ndarray: a matrix which contains the metrics result
         """
         result_list = []
         for metric in self.metrics:
             metric_fuc = metrics_dict[metric.lower()]
-            result = metric_fuc(pos_idx, pos_len)
+            result = metric_fuc(topk_index, pos_len_list)
             result_list.append(result)
-        return result_list
-
-    def _calculate_metrics(self, pos_len_list, topk_index):
-        """integrate the results of each batch and evaluate the topk metrics by users
-
-        Args:
-            pos_len_list (list): a list of users' positive items
-            topk_index (np.ndarray): a matrix which contains the index of the topk items for users
-
-        Returns:
-            np.ndarray: a matrix which contains the metrics result
-
-        """
-
-        #pos_idx_matrix = (topk_index < pos_len_list.reshape(-1, 1))
-        #pos_idx_matrix = (topk_index < pos_len_list.reshape(-1, 1))
-        result_list = self.metrics_info(topk_index, pos_len_list)  # n_users x len(metrics) x len(ranks)
-        result = np.stack(result_list, axis=0).mean(axis=1)  # len(metrics) x len(ranks)
-        return result
+        return np.stack(result_list, axis=0)
 
     def __str__(self):
         mesg = 'The TopK Evaluator Info:\n' + '\tMetrics:[' + ', '.join(

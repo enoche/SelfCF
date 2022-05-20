@@ -1,9 +1,4 @@
 # coding: utf-8
-# @Time   : 2021/3/30
-# @Author : Xin Zhou
-# @Email  : enoche.chow@gmail.com
-
-# UPDATE:
 
 """
 Data pre-processing
@@ -14,6 +9,7 @@ from collections import Counter
 import os, copy
 import pandas as pd
 import numpy as np
+import time
 #from torch.utils.data import Dataset
 
 
@@ -34,6 +30,8 @@ class RecDataset(object):
         if df is not None:
             self.df = df
             return
+        self.ui_core_splitting_str = self._k_core_and_splitting()
+        self.processed_data_name = '{}_{}_processed.inter'.format(self.dataset_name, self.ui_core_splitting_str)
         # load from preprocessed path?
         if self.config['load_preprocessed'] and self._load_preprocessed_dataset():
             self.preprocessed_loaded = True
@@ -44,8 +42,24 @@ class RecDataset(object):
         # pre-processing
         self._data_processing()
 
+    def _k_core_and_splitting(self):
+        user_min_n = 1
+        item_min_n = 1
+        if self.config['min_user_inter_num'] is not None:
+            user_min_n = max(self.config['min_user_inter_num'], 1)
+        if self.config['min_item_inter_num'] is not None:
+            item_min_n = max(self.config['min_item_inter_num'], 1)
+        # splitting
+        ratios = self.config['split_ratio']
+        tot_ratio = sum(ratios)
+        # remove 0.0 in ratios
+        ratios = [i for i in ratios if i > .0]
+        ratios = [str(int(_ * 10 / tot_ratio)) for _ in ratios]
+        s = ''.join(ratios)
+        return 'u{}i{}_s'.format(user_min_n, item_min_n) + s
+
     def _load_preprocessed_dataset(self):
-        file_path = os.path.join(self.preprocessed_dataset_path, '{}_processed.{}'.format(self.dataset_name, 'inter'))
+        file_path = os.path.join(self.preprocessed_dataset_path, self.processed_data_name)
         if not os.path.isfile(file_path):
             return False
         # load
@@ -56,9 +70,9 @@ class RecDataset(object):
         """Load dataset from scratch.
         Initialize attributes firstly, then load data from atomic files, pre-process the dataset lastly.
         """
-        self.logger.debug('Loading {} from scratch'.format(self.__class__))
+        self.logger.info('Loading {} from scratch'.format(self.__class__))
         # get path
-        file_path = os.path.join(self.dataset_path, '{}.{}'.format(self.dataset_name, 'inter'))
+        file_path = os.path.join(self.dataset_path, '{}.inter'.format(self.dataset_name))
         if not os.path.isfile(file_path):
             raise ValueError('File {} not exist'.format(file_path))
         self.df = self._load_df_from_file(file_path, self.config['load_cols'])
@@ -120,7 +134,7 @@ class RecDataset(object):
                 dropped_inter |= df[self.uid_field].isin(ban_users)
             if self.iid_field:
                 dropped_inter |= df[self.iid_field].isin(ban_items)
-            self.logger.debug('[{}] dropped interactions'.format(len(dropped_inter)))
+            # self.logger.info('[{}] dropped interactions'.format(len(dropped_inter)))
             df.drop(df.index[dropped_inter], inplace=True)
 
     def _get_illegal_ids_by_inter_num(self, df, field, max_num=None, min_num=None):
@@ -194,7 +208,24 @@ class RecDataset(object):
         split_ratios = np.cumsum(ratios)[:-1]
         split_timestamps = list(np.quantile(self.df[self.ts_id], split_ratios))
 
+        # get df training dataset unique users/items
+        df_train = self.df.loc[self.df[self.ts_id] < split_timestamps[0]]
+        self.logger.info('==Splitting: 1. Reindexing and filtering out new users/items not in train dataset...')
+
+        uni_users = pd.unique(df_train[self.uid_field])
+        uni_items = pd.unique(df_train[self.iid_field])
+        # re_index users & items
+        u_id_map = {k: i for i, k in enumerate(uni_users)}
+        i_id_map = {k: i for i, k in enumerate(uni_items)}
+        self.df[self.uid_field] = self.df[self.uid_field].map(u_id_map)
+        self.df[self.iid_field] = self.df[self.iid_field].map(i_id_map)
+        # filter out Nan line
+        self.df.dropna(inplace=True)
+        # as int
+        self.df = self.df.astype(int)
+
         # split df based on global time
+        self.logger.info('==Splitting: 2. Train/Valid/Test.')
         dfs = []
         start = 0
         for i in split_timestamps:
@@ -202,38 +233,15 @@ class RecDataset(object):
             start = i
         # last
         dfs.append(self.df.loc[start <= self.df[self.ts_id]].copy())
-        # filter out new users/items in valid/test dataset?
-        uni_users = pd.unique(dfs[0][self.uid_field])
-        uni_items = pd.unique(dfs[0][self.iid_field])
-        for i in range(1, len(dfs)):
-            dropped_idx = pd.Series(False, index=dfs[i].index)
-            dropped_idx |= ~dfs[i][self.uid_field].isin(uni_users)
-            dropped_idx |= ~dfs[i][self.iid_field].isin(uni_items)
-            dfs[i].drop(dfs[i].index[dropped_idx], inplace=True)
 
-        # drop new users/items in full_dataset
-        full_dropped_idx = pd.Series(False, index=self.df.index)
-        full_dropped_idx |= ~self.df[self.uid_field].isin(uni_users)
-        full_dropped_idx |= ~self.df[self.iid_field].isin(uni_items)
-        self.df.drop(self.df.index[full_dropped_idx], inplace=True)
-
-        # reindex users and items
-        u_id_map = {k: i for i, k in enumerate(uni_users)}
-        i_id_map = {k: i for i, k in enumerate(uni_items)}
-        self._re_index(dfs+[self.df], u_id_map, i_id_map)
         # save to disk
+        self.logger.info('==Splitting: 3. Dumping...')
         self._save_dfs_to_disk(u_id_map, i_id_map, dfs)
-        #self._drop_cols(dfs+[self.df], [self.ts_id])
+        # self._drop_cols(dfs+[self.df], [self.ts_id])
 
         # wrap as RecDataset
         full_ds = [self.copy(_) for _ in dfs]
         return full_ds
-
-    def _re_index(self, dfs, u_id_map, i_id_map):
-        for _df in dfs:
-            _df.reset_index(drop=True, inplace=True)
-            _df[self.uid_field].replace(u_id_map, inplace=True)
-            _df[self.iid_field].replace(i_id_map, inplace=True)
 
     def _save_dfs_to_disk(self, u_map, i_map, dfs):
         if self.config['load_preprocessed'] and not self.preprocessed_loaded:
@@ -241,17 +249,19 @@ class RecDataset(object):
             if not os.path.exists(dir_name):
                 os.makedirs(dir_name)
             # save id mapping
-            u_df = pd.DataFrame(list(u_map.items()),columns = [self.uid_field,'new_id'])
-            i_df = pd.DataFrame(list(i_map.items()),columns = [self.iid_field,'new_id'])
-            u_df.to_csv(os.path.join(self.preprocessed_dataset_path, '{}_u_mapping.csv'.format(self.dataset_name)),
+            u_df = pd.DataFrame(list(u_map.items()), columns=[self.uid_field, 'new_id'])
+            i_df = pd.DataFrame(list(i_map.items()), columns=[self.iid_field, 'new_id'])
+            u_df.to_csv(os.path.join(self.preprocessed_dataset_path,
+                                     '{}_u_{}_mapping.csv'.format(self.dataset_name, self.ui_core_splitting_str)),
                         sep=self.config['field_separator'], index=False)
-            i_df.to_csv(os.path.join(self.preprocessed_dataset_path, '{}_i_mapping.csv'.format(self.dataset_name)),
+            i_df.to_csv(os.path.join(self.preprocessed_dataset_path,
+                                     '{}_i_{}_mapping.csv'.format(self.dataset_name, self.ui_core_splitting_str)),
                         sep=self.config['field_separator'], index=False)
             # 0-training/1-validation/2-test
             for i, temp_df in enumerate(dfs):
                 temp_df[self.config['preprocessed_data_splitting']] = i
             temp_df = pd.concat(dfs)
-            temp_df.to_csv(os.path.join(self.preprocessed_dataset_path, '{}_processed.{}'.format(self.dataset_name, 'inter')),
+            temp_df.to_csv(os.path.join(self.preprocessed_dataset_path, self.processed_data_name),
                            sep=self.config['field_separator'], index=False)
             self.logger.info('\nData saved to preprocessed dir: \n' + self.preprocessed_dataset_path)
 
@@ -290,7 +300,10 @@ class RecDataset(object):
     def shuffle(self):
         """Shuffle the interaction records inplace.
         """
-        self.df = self.df.sample(frac=1).reset_index(drop=True)
+        self.df = self.df.sample(frac=1, replace=False).reset_index(drop=True)
+
+    def sort_by_chronological(self):
+        self.df.sort_values(by=[self.ts_id], inplace=True, ignore_index=True)
 
     def __len__(self):
         return len(self.df)

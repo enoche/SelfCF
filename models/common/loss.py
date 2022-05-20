@@ -1,3 +1,5 @@
+# coding: utf-8
+
 
 import torch
 import torch.nn as nn
@@ -47,3 +49,13 @@ class EmbLoss(nn.Module):
         emb_loss /= embeddings[-1].shape[0]
         return emb_loss
 
+
+class L2Loss(nn.Module):
+    def __init__(self):
+        super(L2Loss, self).__init__()
+
+    def forward(self, *embeddings):
+        l2_loss = torch.zeros(1).to(embeddings[-1].device)
+        for embedding in embeddings:
+            l2_loss += torch.sum(embedding**2)*0.5
+        return l2_loss

@@ -1,3 +1,5 @@
 embedding_size: 64
-n_layers: [1, 2, 3, 4]
-reg_weight: [1e-02, 1e-03, 1e-04, 1e-05]
+n_layers: [4]
+reg_weight: [1e-02]
+hyper_parameters: ["n_layers", "reg_weight"]
+

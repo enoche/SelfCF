@@ -1,15 +1,5 @@
-# @Time   : 2020/7/7
-# @Author : Yupeng Hou
-# @Email  : houyupeng@ruc.edu.cn
+# coding: utf-8
 
-# UPDATE
-# @Time   : 2020/9/9, 2020/9/29
-# @Author : Yupeng Hou, Yushuo Chen
-# @email  : houyupeng@ruc.edu.cn, chenyushuo@ruc.edu.cn
-
-# UPDATE 2
-# @Time :
-# @email: enoche.chow@gmail.com
 """
 Wrap dataset into dataloader
 ################################################
@@ -24,16 +14,14 @@ from scipy.sparse import coo_matrix
 
 
 class AbstractDataLoader(object):
-    """:class:`AbstractDataLoader` is an abstract object which would return a batch of data which is loaded by
-    :class:`~recbole.data.interaction.Interaction` when it is iterated.
+    """:class:`AbstractDataLoader` is an abstract object which would return a batch of data
     And it is also the ancestor of all other dataloader.
 
     Args:
         config (Config): The config of dataloader.
         dataset (Dataset): The dataset of dataloader.
         batch_size (int, optional): The batch_size of dataloader. Defaults to ``1``.
-        dl_format (InputType, optional): The input type of dataloader. Defaults to
-            :obj:`~recbole.utils.enum_type.InputType.POINTWISE`.
+        dl_format (InputType, optional): The input type of dataloader.
         shuffle (bool, optional): Whether the dataloader will be shuffle after a round. Defaults to ``False``.
 
     Attributes:
@@ -50,11 +38,12 @@ class AbstractDataLoader(object):
         self.config = config
         self.logger = getLogger()
         self.dataset = dataset
-        if config['model_type'] == ModelType.GENERAL:
-            self.dataset.df.drop(self.dataset.ts_id, inplace=True, axis=1)
-        elif config['model_type'] == ModelType.SEQUENTIAL:
-            # sort instances
-            pass
+        self.dataset_bk = self.dataset.copy(self.dataset.df)
+        # if config['model_type'] == ModelType.GENERAL:
+        #     self.dataset.df.drop(self.dataset.ts_id, inplace=True, axis=1)
+        # elif config['model_type'] == ModelType.SEQUENTIAL:
+        #     # sort instances
+        #     pass
         self.additional_dataset = additional_dataset
         self.batch_size = batch_size
         self.step = batch_size
@@ -62,10 +51,11 @@ class AbstractDataLoader(object):
         self.neg_sampling = neg_sampling
         self.device = config['device']
 
+        self.sparsity = 1 - self.dataset.inter_num / self.dataset.user_num / self.dataset.item_num
         self.pr = 0
         self.inter_pr = 0
 
-    def setup(self):
+    def pretrain_setup(self):
         """This function can be used to deal with some problems after essential args are initialized,
         such as the batch-size-adaptation when neg-sampling is needed, and so on. By default, it will do nothing.
         """
@@ -121,19 +111,38 @@ class TrainDataLoader(AbstractDataLoader):
 
         # special for training dataloader
         self.history_items_per_u = dict()
-        self.all_items = self.dataset.df[self.dataset.iid_field].unique()
-        random.shuffle(self.all_items)
+        # full items in training.
+        self.all_items = self.dataset.df[self.dataset.iid_field].unique().tolist()
+        self.all_uids = self.dataset.df[self.dataset.uid_field].unique()
         self.all_item_len = len(self.all_items)
+        # if full sampling
+        self.use_full_sampling = config['use_full_sampling']
 
         if config['use_neg_sampling']:
-            self.sample_func = self._get_neg_sample
+            if self.use_full_sampling:
+                self.sample_func = self._get_full_uids_sample
+            else:
+                self.sample_func = self._get_neg_sample
         else:
             self.sample_func = self._get_non_neg_sample
 
-        # get random item
-        self.neg_pr = 0
-
         self._get_history_items_u()
+
+    def pretrain_setup(self):
+        """
+        Reset dataloader. Outputing the same positive & negative samples with each training.
+        :return:
+        """
+        # self.pr & inter_pr already set to 0 in __next__(self)
+        # sort & random
+        if self.shuffle:
+            self.dataset = self.dataset_bk.copy(self.dataset_bk.df)
+        self.all_items.sort()
+        if self.use_full_sampling:
+            self.all_uids.sort()
+        random.shuffle(self.all_items)
+        # reorder dataset as default (chronological order)
+        #self.dataset.sort_by_chronological()
 
     def inter_matrix(self, form='coo', value_field=None):
         """Get sparse matrix that describe interactions between user_id and item_id.
@@ -196,17 +205,19 @@ class TrainDataLoader(AbstractDataLoader):
 
     @property
     def pr_end(self):
+        if self.use_full_sampling:
+            return len(self.all_uids)
         return len(self.dataset)
 
     def _shuffle(self):
         self.dataset.shuffle()
+        if self.use_full_sampling:
+            np.random.shuffle(self.all_uids)
 
     def _next_batch_data(self):
-        """
-        batch data format: tensor(3, batch_size)
-            [0]: user list; [1]: positive items; [2]: negative items
-        :return:
-        """
+        return self.sample_func()
+
+    def _get_neg_sample(self):
         cur_data = self.dataset[self.pr: self.pr + self.step]
         self.pr += self.step
         # to tensor
@@ -214,17 +225,27 @@ class TrainDataLoader(AbstractDataLoader):
         item_tensor = torch.tensor(cur_data[self.config['ITEM_ID_FIELD']].values).type(torch.LongTensor).to(self.device)
         batch_tensor = torch.cat((torch.unsqueeze(user_tensor, 0),
                                   torch.unsqueeze(item_tensor, 0)))
-        return self.sample_func(batch_tensor, cur_data[self.config['USER_ID_FIELD']])
-
-    def _get_neg_sample(self, batch_tensor, u_ids):
+        u_ids = cur_data[self.config['USER_ID_FIELD']]
         # sampling negative items only in the dataset (train)
         neg_ids = self._sample_neg_ids(u_ids).to(self.device)
         # merge negative samples
         batch_tensor = torch.cat((batch_tensor, neg_ids.unsqueeze(0)))
         return batch_tensor
 
-    def _get_non_neg_sample(self, batch_tensor, u_ids):
+    def _get_non_neg_sample(self):
+        cur_data = self.dataset[self.pr: self.pr + self.step]
+        self.pr += self.step
+        # to tensor
+        user_tensor = torch.tensor(cur_data[self.config['USER_ID_FIELD']].values).type(torch.LongTensor).to(self.device)
+        item_tensor = torch.tensor(cur_data[self.config['ITEM_ID_FIELD']].values).type(torch.LongTensor).to(self.device)
+        batch_tensor = torch.cat((torch.unsqueeze(user_tensor, 0),
+                                  torch.unsqueeze(item_tensor, 0)))
         return batch_tensor
+
+    def _get_full_uids_sample(self):
+        user_tensor = torch.tensor(self.all_uids[self.pr: self.pr + self.step]).type(torch.LongTensor).to(self.device)
+        self.pr += self.step
+        return user_tensor
 
     def _sample_neg_ids(self, u_ids):
         neg_ids = []
@@ -237,8 +258,11 @@ class TrainDataLoader(AbstractDataLoader):
         return torch.tensor(neg_ids).type(torch.LongTensor)
 
     def _random(self):
-        self.neg_pr = (self.neg_pr + 1 + random.getrandbits(6)) % self.all_item_len
-        return self.all_items[self.neg_pr]
+        #self.neg_pr = (self.neg_pr + 1 + random.getrandbits(6)) % self.all_item_len
+        #return self.all_items[self.neg_pr]
+        # updated to normal random method:
+        rd_id = random.sample(self.all_items, 1)[0]
+        return rd_id
 
     def _get_history_items_u(self):
         uid_field = self.dataset.uid_field
@@ -247,6 +271,7 @@ class TrainDataLoader(AbstractDataLoader):
         uid_freq = self.dataset.df.groupby(uid_field)[iid_field]
         for u, u_ls in uid_freq:
             self.history_items_per_u[u] = u_ls.values
+        return self.history_items_per_u
 
 
 class EvalDataLoader(AbstractDataLoader):
@@ -273,7 +298,7 @@ class EvalDataLoader(AbstractDataLoader):
 
     @property
     def pr_end(self):
-        return len(self.dataset)
+        return self.eval_u.shape[0]
 
     def _shuffle(self):
         self.dataset.shuffle()

@@ -1,15 +1,6 @@
 # @Time   : 2020/6/26
-# @Author : Shanlei Mu
-# @Email  : slmu@ruc.edu.cn
-
-# UPDATE:
-# @Time   : 2020/8/7, 2020/9/26, 2020/9/26, 2020/10/01, 2020/9/16, 2020/10/8, 2020/10/15
-# @Author : Zihan Lin, Yupeng Hou, Yushuo Chen, Shanlei Mu, Xingyu Pan, Hui Wang, Xinyan Fan
-# @Email  : linzihan.super@foxmail.com, houyupeng@ruc.edu.cn, chenyushuo@ruc.edu.cn, slmu@ruc.edu.cn, panxy@ruc.edu.cn, hui.wang@ruc.edu.cn, xinyan.fan@ruc.edu.cn
 
 r"""
-Update by Zhou Xin
-enoche.chow@gmail.com
 ################################
 """
 
@@ -137,6 +128,7 @@ class Trainer(AbstractTrainer):
         self.model.train()
         loss_func = loss_func or self.model.calculate_loss
         total_loss = None
+        loss_batches = []
         for batch_idx, interaction in enumerate(train_data):
             self.optimizer.zero_grad()
             losses = loss_func(interaction)
@@ -148,11 +140,12 @@ class Trainer(AbstractTrainer):
                 loss = losses
                 total_loss = losses.item() if total_loss is None else total_loss + losses.item()
             self._check_nan(loss)
-            loss.backward()
+            #loss.backward()
             if self.clip_grad_norm:
                 clip_grad_norm_(self.model.parameters(), **self.clip_grad_norm)
-            self.optimizer.step()
-        return total_loss
+            #self.optimizer.step()
+            loss_batches.append(loss.detach())
+        return total_loss, loss_batches
 
     def _valid_epoch(self, valid_data):
         r"""Valid the model with valid data
@@ -238,13 +231,17 @@ class Trainer(AbstractTrainer):
         for epoch_idx in range(self.start_epoch, self.epochs):
             # train
             training_start_time = time()
-            train_loss = self._train_epoch(train_data, epoch_idx)
+            self.model.pre_epoch_processing()
+            train_loss, _ = self._train_epoch(train_data, epoch_idx)
             self.train_loss_dict[epoch_idx] = sum(train_loss) if isinstance(train_loss, tuple) else train_loss
             training_end_time = time()
             train_loss_output = \
                 self._generate_train_loss_output(epoch_idx, training_start_time, training_end_time, train_loss)
+            post_info = self.model.post_epoch_processing()
             if verbose:
                 self.logger.info(train_loss_output)
+                if post_info is not None:
+                    self.logger.info(post_info)
 
             # eval
             if (epoch_idx + 1) % self.eval_step == 0:
@@ -256,17 +253,17 @@ class Trainer(AbstractTrainer):
                 valid_end_time = time()
                 valid_score_output = "epoch %d evaluating [time: %.2fs, valid_score: %f]" % \
                                      (epoch_idx, valid_end_time - valid_start_time, valid_score)
-                valid_result_output = 'valid result: ' + dict2str(valid_result)
+                valid_result_output = 'valid result: \n' + dict2str(valid_result)
                 # test
-                #_, test_result = self._valid_epoch(test_data)
+                _, test_result = self._valid_epoch(test_data)
                 if verbose:
                     self.logger.info(valid_score_output)
                     self.logger.info(valid_result_output)
-                    #self.logger.info('test result: ' + dict2str(test_result))
+                    self.logger.info('test result: \n' + dict2str(test_result))
                 if update_flag:
                     if saved:
                         self._save_checkpoint(epoch_idx)
-                        update_output = 'Saving current best: %s' % self.saved_model_file
+                        update_output = str(f'██Saving current best: {self.saved_model_file}')
                         if verbose:
                             self.logger.info(update_output)
                     self.best_valid_result = valid_result

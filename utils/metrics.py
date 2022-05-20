@@ -1,12 +1,4 @@
 # -*- encoding: utf-8 -*-
-# @Time    :   2020/08/04
-# @Author  :   Kaiyuan Li
-# @email   :   tsotfsk@outlook.com
-
-# UPDATE
-# @Time    :   2020/08/12, 2020/08/21, 2020/9/16
-# @Author  :   Kaiyuan Li, Zhichao Feng, Xingyu Pan
-# @email   :   tsotfsk@outlook.com, fzcbupt@gmail.com, panxy@ruc.edu.cn
 
 """
 ############################
@@ -20,97 +12,17 @@ from sklearn.metrics import log_loss, mean_absolute_error, mean_squared_error
 
 #    TopK Metrics    #
 
-def hit_(pos_index, pos_len):
-    r"""Hit_ (also known as hit ratio at :math:`N`) is a way of calculating how many 'hits' you have
-    in an n-sized list of ranked items.
-
-    .. _Hit: https://medium.com/@rishabhbhatia315/recommendation-system-evaluation-metrics-3f6739288870
-
-    .. math::
-        \mathrm {HR@K} =\frac{Number \space of \space Hits @K}{|GT|}
-
-    :math:`HR` is the number of users with a positive sample in the recommendation list.
-    :math:`GT` is the total number of samples in the test set.
-
-    """
-    result = np.cumsum(pos_index, axis=1)
-    return (result > 0).astype(int)
-
-
-def mrr_(pos_index, pos_len):
-    r"""The MRR_ (also known as mean reciprocal rank) is a statistic measure for evaluating any process
-    that produces a list of possible responses to a sample of queries, ordered by probability of correctness.
-
-    .. _MRR: https://en.wikipedia.org/wiki/Mean_reciprocal_rank
-
-    .. math::
-        \mathrm {MRR} = \frac{1}{|{U}|} \sum_{i=1}^{|{U}|} \frac{1}{rank_i}
-
-    :math:`U` is the number of users, :math:`rank_i` is the rank of the first item in the recommendation list
-    in the test set results for user :math:`i`.
-
-    """
-    idxs = pos_index.argmax(axis=1)
-    result = np.zeros_like(pos_index, dtype=np.float)
-    for row, idx in enumerate(idxs):
-        if pos_index[row, idx] > 0:
-            result[row, idx:] = 1 / (idx + 1)
-        else:
-            result[row, idx:] = 0
-    return result
-
-
-def map_(pos_index, pos_len):
-    r"""MAP_ (also known as Mean Average Precision) The MAP is meant to calculate Avg. Precision for the relevant items.
-
-    Note:
-        In this case the normalization factor used is :math:`\frac{1}{\min (m,N)}`, which prevents your AP score from
-        being unfairly suppressed when your number of recommendations couldn't possibly capture all the correct ones.
-
-    .. _map: http://sdsawtelle.github.io/blog/output/mean-average-precision-MAP-for-recommender-systems.html#MAP-for-Recommender-Algorithms
-
-    .. math::
-        \begin{align*}
-        \mathrm{AP@N} &= \frac{1}{\mathrm{min}(m,N)}\sum_{k=1}^N P(k) \cdot rel(k) \\
-        \mathrm{MAP@N}& = \frac{1}{|U|}\sum_{u=1}^{|U|}(\mathrm{AP@N})_u
-        \end{align*}
-
-    """
-    pre = precision_(pos_index, pos_len)
-    sum_pre = np.cumsum(pre * pos_index.astype(np.float), axis=1)
-    len_rank = np.full_like(pos_len, pos_index.shape[1])
-    actual_len = np.where(pos_len > len_rank, len_rank, pos_len)
-    result = np.zeros_like(pos_index, dtype=np.float)
-    for row, lens in enumerate(actual_len):
-        ranges = np.arange(1, pos_index.shape[1]+1)
-        ranges[lens:] = ranges[lens - 1]
-        result[row] = sum_pre[row] / ranges
-    return result
-
 
 def recall_(pos_index, pos_len):
-    r"""Recall_ (also known as sensitivity) is the fraction of the total amount of relevant instances
-    that were actually retrieved
-
-    .. _recall: https://en.wikipedia.org/wiki/Precision_and_recall#Recall
-
-    .. math::
-        \mathrm {Recall@K} = \frac{|Rel_u\cap Rec_u|}{Rel_u}
-
-    :math:`Rel_u` is the set of items relavent to user :math:`U`,
-    :math:`Rec_u` is the top K items recommended to users.
-    We obtain the result by calculating the average :math:`Recall@K` of each user.
-
-    """
-    return np.cumsum(pos_index, axis=1) / pos_len.reshape(-1, 1)
+    # Recall: average single users recall ratio.
+    rec_ret = np.cumsum(pos_index, axis=1) / pos_len.reshape(-1, 1)
+    return rec_ret.mean(axis=0)
 
 
 def ndcg_(pos_index, pos_len):
     r"""NDCG_ (also known as normalized discounted cumulative gain) is a measure of ranking quality.
     Through normalizing the score, users and their recommendation list results in the whole test set can be evaluated.
-
     .. _NDCG: https://en.wikipedia.org/wiki/Discounted_cumulative_gain#Normalized_DCG
-
     .. math::
         \begin{gather}
             \mathrm {DCG@K}=\sum_{i=1}^{K} \frac{2^{rel_i}-1}{\log_{2}{(i+1)}}\\
@@ -118,14 +30,11 @@ def ndcg_(pos_index, pos_len):
             \mathrm {NDCG_u@K}=\frac{DCG_u@K}{IDCG_u@K}\\
             \mathrm {NDCG@K}=\frac{\sum \nolimits_{u \in u^{te}NDCG_u@K}}{|u^{te}|}
         \end{gather}
-
     :math:`K` stands for recommending :math:`K` items.
     And the :math:`rel_i` is the relevance of the item in position :math:`i` in the recommendation list.
     :math:`2^{rel_i}` equals to 1 if the item hits otherwise 0.
     :math:`U^{te}` is for all users in the test set.
-
     """
-
     len_rank = np.full_like(pos_len, pos_index.shape[1])
     idcg_len = np.where(pos_len > len_rank, len_rank, pos_len)
 
@@ -141,24 +50,64 @@ def ndcg_(pos_index, pos_len):
     dcg = np.cumsum(np.where(pos_index, dcg, 0), axis=1)
 
     result = dcg / idcg
-    return result
+    return result.mean(axis=0)
+
+
+def map_(pos_index, pos_len):
+    r"""MAP_ (also known as Mean Average Precision) The MAP is meant to calculate Avg. Precision for the relevant items.
+    Note:
+        In this case the normalization factor used is :math:`\frac{1}{\min (m,N)}`, which prevents your AP score from
+        being unfairly suppressed when your number of recommendations couldn't possibly capture all the correct ones.
+    .. _map: http://sdsawtelle.github.io/blog/output/mean-average-precision-MAP-for-recommender-systems.html#MAP-for-Recommender-Algorithms
+    .. math::
+        \begin{align*}
+        \mathrm{AP@N} &= \frac{1}{\mathrm{min}(m,N)}\sum_{k=1}^N P(k) \cdot rel(k) \\
+        \mathrm{MAP@N}& = \frac{1}{|U|}\sum_{u=1}^{|U|}(\mathrm{AP@N})_u
+        \end{align*}
+    """
+    pre = pos_index.cumsum(axis=1) / np.arange(1, pos_index.shape[1] + 1)
+    sum_pre = np.cumsum(pre * pos_index.astype(np.float), axis=1)
+    len_rank = np.full_like(pos_len, pos_index.shape[1])
+    actual_len = np.where(pos_len > len_rank, len_rank, pos_len)
+    result = np.zeros_like(pos_index, dtype=np.float)
+    for row, lens in enumerate(actual_len):
+        ranges = np.arange(1, pos_index.shape[1]+1)
+        ranges[lens:] = ranges[lens - 1]
+        result[row] = sum_pre[row] / ranges
+    return result.mean(axis=0)
 
 
 def precision_(pos_index, pos_len):
     r"""Precision_ (also called positive predictive value) is the fraction of
     relevant instances among the retrieved instances
-
     .. _precision: https://en.wikipedia.org/wiki/Precision_and_recall#Precision
-
     .. math::
         \mathrm {Precision@K} = \frac{|Rel_u \cap Rec_u|}{Rec_u}
-
     :math:`Rel_u` is the set of items relavent to user :math:`U`,
     :math:`Rec_u` is the top K items recommended to users.
     We obtain the result by calculating the average :math:`Precision@K` of each user.
-
     """
-    return pos_index.cumsum(axis=1) / np.arange(1, pos_index.shape[1] + 1)
+    rec_ret = pos_index.cumsum(axis=1) / np.arange(1, pos_index.shape[1] + 1)
+    return rec_ret.mean(axis=0)
+
+
+def mrr_(pos_index, pos_len):
+    r"""The MRR_ (also known as mean reciprocal rank) is a statistic measure for evaluating any process
+    that produces a list of possible responses to a sample of queries, ordered by probability of correctness.
+    .. _MRR: https://en.wikipedia.org/wiki/Mean_reciprocal_rank
+    .. math::
+        \mathrm {MRR} = \frac{1}{|{U}|} \sum_{i=1}^{|{U}|} \frac{1}{rank_i}
+    :math:`U` is the number of users, :math:`rank_i` is the rank of the first item in the recommendation list
+    in the test set results for user :math:`i`.
+    """
+    idxs = pos_index.argmax(axis=1)
+    result = np.zeros_like(pos_index, dtype=np.float)
+    for row, idx in enumerate(idxs):
+        if pos_index[row, idx] > 0:
+            result[row, idx:] = 1 / (idx + 1)
+        else:
+            result[row, idx:] = 0
+    return result.mean(axis=0)
 
 
 #    CTR Metrics    #
@@ -321,7 +270,6 @@ and call the functions based on deserialized names
 """
 metrics_dict = {
     'ndcg': ndcg_,
-    'hit': hit_,
     'precision': precision_,
     'map': map_,
     'recall': recall_,

@@ -1,14 +1,6 @@
 # @Time   : 2020/6/28
-# @Author : Zihan Lin
-# @Email  : linzihan.super@foxmail.com
-
-# UPDATE
-# @Time   : 2020/10/04, 2020/10/9
-# @Author : Shanlei Mu, Yupeng Hou
-# @Email  : slmu@ruc.edu.cn, houyupeng@ruc.edu.cn
 
 """
-recbole.config.configurator
 ################################
 """
 
@@ -22,9 +14,6 @@ from utils.utils import get_model_type
 
 class Config(object):
     """ Configurator module that load the defined parameters.
-
-    Configurator module will first load the default parameters from the fixed properties in RecBole and then
-    load parameters from the external input.
 
     External input supports three kind of forms: config file, command line and parameter dictionaries.
 
@@ -62,10 +51,8 @@ class Config(object):
             config_dict (dict): the external parameter dictionaries, default is None.
         """
         # load dataset config file yaml
-        if config_dict:
-            # merge config dict
-            config_dict['model'] = model
-            config_dict['dataset'] = dataset
+        config_dict['model'] = model
+        config_dict['dataset'] = dataset
         # model type
         config_dict['model_type'] = get_model_type(model)
         self.final_config_dict = self._load_dataset_model_config(config_dict)

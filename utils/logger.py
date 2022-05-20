@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-# @Time   :  2021/03/31
-# @Author : Zhou Xin
-# @Email  : enoche.chow@gmail.com
 
 """
 ###############################
@@ -34,7 +31,7 @@ def init_logger(config):
     filedatefmt = "%a %d %b %Y %H:%M:%S"
     fileformatter = logging.Formatter(filefmt, filedatefmt)
 
-    sfmt = "%(asctime)-15s %(levelname)s %(message)s"
+    sfmt = u"%(asctime)-15s %(levelname)s %(message)s"
     sdatefmt = "%d %b %H:%M"
     sformatter = logging.Formatter(sfmt, sdatefmt)
     if config['state'] is None or config['state'].lower() == 'info':
@@ -49,7 +46,7 @@ def init_logger(config):
         level = logging.CRITICAL
     else:
         level = logging.INFO
-    fh = logging.FileHandler(logfilepath)
+    fh = logging.FileHandler(logfilepath, 'w', 'utf-8')
     fh.setLevel(level)
     fh.setFormatter(fileformatter)
 

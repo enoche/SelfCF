@@ -1,13 +1,4 @@
 # -*- coding: utf-8 -*-
-# @Time   : 2020/6/27 16:40
-# @Author : Shanlei Mu
-# @Email  : slmu@ruc.edu.cn
-# @File   : layers.py
-
-# UPDATE:
-# @Time   : 2020/8/24 14:58, 2020/9/16, 2020/9/21, 2020/10/9
-# @Author : Yujie Lu, Xingyu Pan, Zhichao Feng, Hui Wang
-# @Email  : yujielu1998@gmail.com, panxy@ruc.edu.cn, fzcbupt@gmail.com, hui.wang@ruc.edu.cn
 
 """
 #############################
