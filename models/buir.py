@@ -4,7 +4,7 @@
 # @Email  : enoche.chow@gmail.com
 
 r"""
-BUIR
+BUIR with LigntGCN encoder.
 ################################################
 Bootstrapping User and Item Representations for One-Class Collaborative Filtering, SIGIR21
 """

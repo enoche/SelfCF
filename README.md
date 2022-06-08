@@ -1,8 +1,9 @@
 
 # SelfCF: A Simple Framework for Self-supervised Collaborative Filtering
 
-:label: **Note**: This repo. is deprecated. SelfCF is integrated into [ImRec](https://github.com/enoche/ImRec).
+:label: **Note**: This repo. holds the best hyper-parameters for reproducibility of our models on [Amazon-Grocery and Gourmet Food](https://nijianmo.github.io/amazon/index.html). Please note this repo. is deprecated and will not be maintained. SelfCF is integrated into [ImRec](https://github.com/enoche/ImRec).
 
+---
 
 This is our implementation of the paper:
 
@@ -33,14 +34,14 @@ For details, please refer to the paper.
 - Posterior recommendation results.
 
 ## Data  
-Download from Google Drive: [MovieLens/MOOC/Amazon-Vedio-Game](https://drive.google.com/drive/folders/1WqRAeoWWGdZplYkjS4640V7v0urNiTXg?usp=sharing)  
+Download from Google Drive: [Amazon-Vedio-Games/Food](https://drive.google.com/drive/folders/1WqRAeoWWGdZplYkjS4640V7v0urNiTXg?usp=sharing)  
 
 
 ## Environment:  
 
 python	3.6  
 pytorch	1.8  
-PyYAML	0.1.7  
+PyYAML	6.0
 pandas	0.24  
 numpy 1.19  
 
