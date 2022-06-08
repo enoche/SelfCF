@@ -34,14 +34,14 @@ For details, please refer to the paper.
 - Posterior recommendation results.
 
 ## Data  
-Download from Google Drive: [Amazon-Vedio-Games/Food](https://drive.google.com/drive/folders/1WqRAeoWWGdZplYkjS4640V7v0urNiTXg?usp=sharing)  
+Download from Google Drive: [Amazon-Vedio-Games/Food etc.](https://drive.google.com/drive/folders/1WqRAeoWWGdZplYkjS4640V7v0urNiTXg?usp=sharing)  
 
 
 ## Environment:  
 
 python	3.6  
 pytorch	1.8  
-PyYAML	6.0
+PyYAML	6.0  
 pandas	0.24  
 numpy 1.19  
 
