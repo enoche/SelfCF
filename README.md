@@ -1,5 +1,5 @@
 
-# SelfCF: A Simple Framework for Self-supervised Collaborative Filtering
+# SelfCF: A Simple Framework for Self-supervised Collaborative Filtering (ACM TORS)
 
 :label: **Note**: This repo. holds the best hyper-parameters for reproducibility of our models on [Amazon-Grocery and Gourmet Food](https://nijianmo.github.io/amazon/index.html). Please note this repo. is deprecated and will not be maintained. SelfCF is integrated into [ImRec](https://github.com/enoche/ImRec).
 
