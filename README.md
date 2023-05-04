@@ -2,7 +2,7 @@
 # SelfCF: A Simple Framework for Self-supervised Collaborative Filtering (ACM TORS)
 
 :label: **Note**: This repo. holds the best hyper-parameters for reproducibility of our models on [Amazon-Grocery and Gourmet Food](https://nijianmo.github.io/amazon/index.html). Please note this repo. is deprecated and will not be maintained. SelfCF is integrated into [ImRec](https://github.com/enoche/ImRec).
-
+- :twisted_rightwards_arrows: _SelfCF_ is integrated into the unified [ImRec](https://github.com/enoche/ImRec) framework.
 ---
 
 This is our implementation of the paper:
@@ -45,6 +45,16 @@ PyYAML	6.0
 pandas	0.24  
 numpy 1.19  
 
+## Please condier cite our paper:
+```
+@article{zhou2023selfcf,
+  author = {Zhou, Xin and Sun, Aixin and Liu, Yong and Zhang, Jie and Miao, Chunyan},
+  title = {SelfCF: A Simple Framework for Self-Supervised Collaborative Filtering},
+  year = {2023},
+  journal = {ACM Trans. Recomm. Syst.},
+  publisher = {Association for Computing Machinery},
+}
+```
 
 ## ACK:
 We would like to give thanks to the following repos:  
