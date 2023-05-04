@@ -7,7 +7,7 @@
 
 This is our implementation of the paper:
 
-Xin Zhou, Aixin Sun, Yong Liu, Jie Zhang, Chunyan Miao. SelfCF: A Simple Framework for Self-supervised Collaborative Filtering [http://arxiv.org/abs/2107.03019](http://arxiv.org/abs/2107.03019). 
+Xin Zhou, Aixin Sun, Yong Liu, Jie Zhang, Chunyan Miao. SelfCF: A Simple Framework for Self-supervised Collaborative Filtering [ACM](https://dl.acm.org/doi/abs/10.1145/3591469) 
 
 ## Overview
 
